@@ -140,7 +140,7 @@ class ProductApp(QMainWindow):
             product_id = self.table.item(row, 0).text()
             delete_product(product_id)
             load_products(self.table)  
-            
+
 def load_suppliers(table_widget):
     conn = connect_db()
     cursor = conn.cursor()
@@ -266,12 +266,6 @@ class SupplierApp(QMainWindow):
             self.phone_input.clear()
             self.email_input.clear()
             self.address_input.clear()
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = ProductApp()
-    window.show()
-    sys.exit(app.exec())
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
