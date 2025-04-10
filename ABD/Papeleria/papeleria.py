@@ -757,6 +757,132 @@ class ComprasApp(QMainWindow):
             self.id_proveedor_input.clear()
             self.fecha_input.clear()
             self.total_input.clear()
+
+def cargar_detalles_compra(table_widget):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Detalles_Compra")
+    rows = cursor.fetchall()
+    table_widget.setRowCount(len(rows))
+    for i, row in enumerate(rows):
+        for j, cell in enumerate(row):
+            table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
+    conn.close()
+
+def agregar_detalle_compra(id_compra, id_producto, cantidad, precio_unitario):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO Detalles_Compra (id_compra, id_producto, cantidad, precio_unitario)
+        VALUES (%s, %s, %s, %s)
+    """, (id_compra, id_producto, cantidad, precio_unitario))
+    conn.commit()
+    conn.close()
+
+def actualizar_detalle_compra(id_detalle, id_compra, id_producto, cantidad, precio_unitario):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE Detalles_Compra
+        SET id_compra = %s, id_producto = %s, cantidad = %s, precio_unitario = %s
+        WHERE id_detalle = %s
+    """, (id_compra, id_producto, cantidad, precio_unitario, id_detalle))
+    conn.commit()
+    conn.close()
+
+def eliminar_detalle_compra(id_detalle):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Detalles_Compra WHERE id_detalle = %s", (id_detalle,))
+    conn.commit()
+    conn.close()
+
+class DetallesCompraApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("CRUD Detalles de Compra - Papelería")
+        self.setGeometry(300, 300, 700, 400)
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        form_layout = QFormLayout()
+        self.input_id_compra = QLineEdit()
+        self.input_id_producto = QLineEdit()
+        self.input_cantidad = QLineEdit()
+        self.input_precio_unitario = QLineEdit()
+
+        form_layout.addRow("ID Compra:", self.input_id_compra)
+        form_layout.addRow("ID Producto:", self.input_id_producto)
+        form_layout.addRow("Cantidad:", self.input_cantidad)
+        form_layout.addRow("Precio Unitario:", self.input_precio_unitario)
+
+        button_layout = QHBoxLayout()
+        self.btn_agregar = QPushButton("Agregar")
+        self.btn_actualizar = QPushButton("Actualizar")
+        self.btn_eliminar = QPushButton("Eliminar")
+
+        self.btn_agregar.clicked.connect(self.agregar_detalle)
+        self.btn_actualizar.clicked.connect(self.actualizar_detalle)
+        self.btn_eliminar.clicked.connect(self.eliminar_detalle)
+
+        button_layout.addWidget(self.btn_agregar)
+        button_layout.addWidget(self.btn_actualizar)
+        button_layout.addWidget(self.btn_eliminar)
+
+        self.tabla = QTableWidget()
+        self.tabla.setColumnCount(5)
+        self.tabla.setHorizontalHeaderLabels(["ID Detalle", "ID Compra", "ID Producto", "Cantidad", "Precio Unitario"])
+        self.tabla.cellClicked.connect(self.seleccionar_detalle)
+
+        cargar_detalles_compra(self.tabla)
+
+        layout.addLayout(form_layout)
+        layout.addLayout(button_layout)
+        layout.addWidget(self.tabla)
+
+        contenedor = QWidget()
+        contenedor.setLayout(layout)
+        self.setCentralWidget(contenedor)
+
+    def seleccionar_detalle(self, fila, columna):
+        self.id_seleccionado = self.tabla.item(fila, 0).text()
+        self.input_id_compra.setText(self.tabla.item(fila, 1).text())
+        self.input_id_producto.setText(self.tabla.item(fila, 2).text())
+        self.input_cantidad.setText(self.tabla.item(fila, 3).text())
+        self.input_precio_unitario.setText(self.tabla.item(fila, 4).text())
+
+    def agregar_detalle(self):
+        agregar_detalle_compra(
+            self.input_id_compra.text(),
+            self.input_id_producto.text(),
+            int(self.input_cantidad.text()),
+            float(self.input_precio_unitario.text())
+        )
+        cargar_detalles_compra(self.tabla)
+
+    def actualizar_detalle(self):
+        if hasattr(self, 'id_seleccionado'):
+            actualizar_detalle_compra(
+                self.id_seleccionado,
+                self.input_id_compra.text(),
+                self.input_id_producto.text(),
+                int(self.input_cantidad.text()),
+                float(self.input_precio_unitario.text())
+            )
+            cargar_detalles_compra(self.tabla)
+
+    def eliminar_detalle(self):
+        if hasattr(self, 'id_seleccionado'):
+            eliminar_detalle_compra(self.id_seleccionado)
+            cargar_detalles_compra(self.tabla)
+            self.input_id_compra.clear()
+            self.input_id_producto.clear()
+            self.input_cantidad.clear()
+            self.input_precio_unitario.clear()
+
+       
  
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -778,5 +904,8 @@ if __name__ == "__main__":
 
     ventana_compra = ComprasApp()
     ventana_compra.show()
+
+    ventana_detalles_compra = DetallesCompraApp()
+    ventana_detalles_compra.show()
 
     sys.exit(app.exec())
