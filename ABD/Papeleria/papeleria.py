@@ -267,6 +267,133 @@ class SupplierApp(QMainWindow):
             self.email_input.clear()
             self.address_input.clear()
 
+def load_clients(table_widget):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Clientes")
+    rows = cursor.fetchall()
+    table_widget.setRowCount(len(rows))
+    for i, row in enumerate(rows):
+        for j, cell in enumerate(row):
+            table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
+    conn.close()
+
+def add_client(name, phone, email, address):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO Clientes (nombre, telefono, email, direccion)
+        VALUES (%s, %s, %s, %s)
+    """, (name, phone, email, address))
+    conn.commit()
+    conn.close()
+
+def update_client(client_id, name, phone, email, address):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE Clientes
+        SET nombre = %s, telefono = %s, email = %s, direccion = %s
+        WHERE id_cliente = %s
+    """, (name, phone, email, address, client_id))
+    conn.commit()
+    conn.close()
+
+def delete_client(client_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Clientes WHERE id_cliente = %s", (client_id,))
+    conn.commit()
+    conn.close()
+
+class ClientApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("CRUD Clientes - Papelería")
+        self.setGeometry(200, 200, 600, 400)
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QVBoxLayout()
+
+        # Formulario
+        form_layout = QFormLayout()
+        self.name_input = QLineEdit()
+        self.phone_input = QLineEdit()
+        self.email_input = QLineEdit()
+        self.address_input = QLineEdit()
+
+        form_layout.addRow("Nombre:", self.name_input)
+        form_layout.addRow("Teléfono:", self.phone_input)
+        form_layout.addRow("Email:", self.email_input)
+        form_layout.addRow("Dirección:", self.address_input)
+
+        # Botones
+        button_layout = QHBoxLayout()
+        self.add_button = QPushButton("Agregar")
+        self.update_button = QPushButton("Actualizar")
+        self.delete_button = QPushButton("Eliminar")
+
+        self.add_button.clicked.connect(self.add_client)
+        self.update_button.clicked.connect(self.update_client)
+        self.delete_button.clicked.connect(self.delete_client)
+
+        button_layout.addWidget(self.add_button)
+        button_layout.addWidget(self.update_button)
+        button_layout.addWidget(self.delete_button)
+
+        # Tabla
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["ID", "Nombre", "Teléfono", "Email", "Dirección"])
+        self.table.cellClicked.connect(self.load_inputs_from_table)
+
+        load_clients(self.table)
+
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.table)
+
+        container = QWidget()
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)
+
+    def load_inputs_from_table(self, row, column):
+        self.selected_id = self.table.item(row, 0).text()
+        self.name_input.setText(self.table.item(row, 1).text())
+        self.phone_input.setText(self.table.item(row, 2).text())
+        self.email_input.setText(self.table.item(row, 3).text())
+        self.address_input.setText(self.table.item(row, 4).text())
+
+    def add_client(self):
+        name = self.name_input.text()
+        phone = self.phone_input.text()
+        email = self.email_input.text()
+        address = self.address_input.text()
+        add_client(name, phone, email, address)
+        load_clients(self.table)
+
+    def update_client(self):
+        if hasattr(self, 'selected_id'):
+            client_id = self.selected_id
+            name = self.name_input.text()
+            phone = self.phone_input.text()
+            email = self.email_input.text()
+            address = self.address_input.text()
+            update_client(client_id, name, phone, email, address)
+            load_clients(self.table)
+
+    def delete_client(self):
+        if hasattr(self, 'selected_id'):
+            client_id = self.selected_id
+            delete_client(client_id)
+            load_clients(self.table)
+            self.name_input.clear()
+            self.phone_input.clear()
+            self.email_input.clear()
+            self.address_input.clear()
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
@@ -276,4 +403,7 @@ if __name__ == "__main__":
     supplier_window = SupplierApp()
     supplier_window.show()
 
+    client_window = ClientApp()
+    client_window.show()
+    
     sys.exit(app.exec())
