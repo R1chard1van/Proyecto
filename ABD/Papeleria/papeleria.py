@@ -394,6 +394,130 @@ class ClientApp(QMainWindow):
             self.address_input.clear()
 
 
+def cargar_ventas(table_widget):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Ventas")
+    rows = cursor.fetchall()
+    table_widget.setRowCount(len(rows))
+    for i, row in enumerate(rows):
+        for j, cell in enumerate(row):
+            table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
+    conn.close()
+
+# Función para agregar una venta
+def agregar_venta(id_cliente, total, fecha):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO Ventas (id_cliente, total, fecha)
+        VALUES (%s, %s, %s)
+    """, (id_cliente, total, fecha))
+    conn.commit()
+    conn.close()
+
+# Función para actualizar una venta
+def actualizar_venta(id_venta, id_cliente, total, fecha):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE Ventas
+        SET id_cliente = %s, total = %s, fecha = %s
+        WHERE id_venta = %s
+    """, (id_cliente, total, fecha, id_venta))
+    conn.commit()
+    conn.close()
+
+# Función para eliminar una venta
+def eliminar_venta(id_venta):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Ventas WHERE id_venta = %s", (id_venta,))
+    conn.commit()
+    conn.close()
+
+# Clase para la interfaz gráfica del CRUD de Ventas
+class VentasApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("CRUD Ventas - Papelería")
+        self.setGeometry(250, 250, 600, 400)
+        self.init_ui()
+
+    def init_ui(self):
+        main_layout = QVBoxLayout()
+
+        # Formulario
+        form_layout = QFormLayout()
+        self.id_cliente_input = QLineEdit()
+        self.total_input = QLineEdit()
+        self.fecha_input = QLineEdit()
+
+        form_layout.addRow("ID Cliente:", self.id_cliente_input)
+        form_layout.addRow("Total:", self.total_input)
+        form_layout.addRow("Fecha:", self.fecha_input)
+
+        # Botones
+        button_layout = QHBoxLayout()
+        self.agregar_button = QPushButton("Agregar")
+        self.actualizar_button = QPushButton("Actualizar")
+        self.eliminar_button = QPushButton("Eliminar")
+
+        self.agregar_button.clicked.connect(self.agregar_venta)
+        self.actualizar_button.clicked.connect(self.actualizar_venta)
+        self.eliminar_button.clicked.connect(self.eliminar_venta)
+
+        button_layout.addWidget(self.agregar_button)
+        button_layout.addWidget(self.actualizar_button)
+        button_layout.addWidget(self.eliminar_button)
+
+        # Tabla
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["ID Venta", "ID Cliente", "Total", "Fecha"])
+        self.table.cellClicked.connect(self.cargar_inputs_desde_tabla)
+
+        cargar_ventas(self.table)
+
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.table)
+
+        container = QWidget()
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)
+
+    def cargar_inputs_desde_tabla(self, row, column):
+        self.selected_id = self.table.item(row, 0).text()
+        self.id_cliente_input.setText(self.table.item(row, 1).text())
+        self.total_input.setText(self.table.item(row, 2).text())
+        self.fecha_input.setText(self.table.item(row, 3).text())
+
+    def agregar_venta(self):
+        id_cliente = self.id_cliente_input.text()
+        total = float(self.total_input.text())
+        fecha = self.fecha_input.text()
+        agregar_venta(id_cliente, total, fecha)
+        cargar_ventas(self.table)
+
+    def actualizar_venta(self):
+        if hasattr(self, 'selected_id'):
+            id_venta = self.selected_id
+            id_cliente = self.id_cliente_input.text()
+            total = float(self.total_input.text())
+            fecha = self.fecha_input.text()
+            actualizar_venta(id_venta, id_cliente, total, fecha)
+            cargar_ventas(self.table)
+
+    def eliminar_venta(self):
+        if hasattr(self, 'selected_id'):
+            id_venta = self.selected_id
+            eliminar_venta(id_venta)
+            cargar_ventas(self.table)
+            self.id_cliente_input.clear()
+            self.total_input.clear()
+            self.fecha_input.clear()
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
@@ -405,5 +529,8 @@ if __name__ == "__main__":
 
     client_window = ClientApp()
     client_window.show()
-    
+
+    ventana_venta = VentasApp()
+    ventana_venta.show()
+
     sys.exit(app.exec())
