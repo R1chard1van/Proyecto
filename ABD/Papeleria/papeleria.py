@@ -12,7 +12,6 @@ def connect_db():
         database="PapeleriaDB"
     )
 
-# Función para cargar los productos en la tabla
 def load_products(table_widget):
     conn = connect_db()
     cursor = conn.cursor()
@@ -24,7 +23,6 @@ def load_products(table_widget):
             table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
     conn.close()
 
-# Función para agregar un producto
 def add_product(name, description, price, stock, category):
     conn = connect_db()
     cursor = conn.cursor()
@@ -35,7 +33,6 @@ def add_product(name, description, price, stock, category):
     conn.commit()
     conn.close()
 
-# Función para actualizar un producto
 def update_product(product_id, name, description, price, stock, category):
     conn = connect_db()
     cursor = conn.cursor()
@@ -47,7 +44,6 @@ def update_product(product_id, name, description, price, stock, category):
     conn.commit()
     conn.close()
 
-# Función para eliminar un producto
 def delete_product(product_id):
     conn = connect_db()
     cursor = conn.cursor()
@@ -55,7 +51,6 @@ def delete_product(product_id):
     conn.commit()
     conn.close()
 
-# Interfaz gráfica
 class ProductApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -64,10 +59,9 @@ class ProductApp(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        # Layout principal
+
         main_layout = QVBoxLayout()
 
-        # Formulario para agregar o actualizar productos
         form_layout = QFormLayout()
 
         self.name_input = QLineEdit()
@@ -82,7 +76,6 @@ class ProductApp(QMainWindow):
         form_layout.addRow("Stock:", self.stock_input)
         form_layout.addRow("Categoría:", self.category_input)
 
-        # Botones para agregar, actualizar, eliminar
         button_layout = QHBoxLayout()
 
         self.add_button = QPushButton("Agregar")
@@ -96,15 +89,12 @@ class ProductApp(QMainWindow):
         button_layout.addWidget(self.update_button)
         button_layout.addWidget(self.delete_button)
 
-        # Tabla para mostrar los productos
         self.table = QTableWidget()
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["ID", "Nombre", "Descripción", "Precio", "Stock", "Categoría"])
 
-        # Cargar los productos al iniciar
         load_products(self.table)
 
-        # Agregar todo al layout principal
         main_layout.addLayout(form_layout)
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.table)
@@ -120,7 +110,7 @@ class ProductApp(QMainWindow):
         stock = int(self.stock_input.text())
         category = self.category_input.text()
         add_product(name, description, price, stock, category)
-        load_products(self.table)  # Actualizar la tabla
+        load_products(self.table)  
 
     def update_product(self):
         row = self.table.currentRow()
@@ -190,7 +180,6 @@ class SupplierApp(QMainWindow):
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # Formulario
         form_layout = QFormLayout()
         self.name_input = QLineEdit()
         self.phone_input = QLineEdit()
@@ -202,7 +191,6 @@ class SupplierApp(QMainWindow):
         form_layout.addRow("Email:", self.email_input)
         form_layout.addRow("Dirección:", self.address_input)
 
-        # Botones
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("Agregar")
         self.update_button = QPushButton("Actualizar")
@@ -216,7 +204,6 @@ class SupplierApp(QMainWindow):
         button_layout.addWidget(self.update_button)
         button_layout.addWidget(self.delete_button)
 
-        # Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["ID", "Nombre", "Teléfono", "Email", "Dirección"])
@@ -316,7 +303,6 @@ class ClientApp(QMainWindow):
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # Formulario
         form_layout = QFormLayout()
         self.name_input = QLineEdit()
         self.phone_input = QLineEdit()
@@ -328,7 +314,6 @@ class ClientApp(QMainWindow):
         form_layout.addRow("Email:", self.email_input)
         form_layout.addRow("Dirección:", self.address_input)
 
-        # Botones
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("Agregar")
         self.update_button = QPushButton("Actualizar")
@@ -342,7 +327,6 @@ class ClientApp(QMainWindow):
         button_layout.addWidget(self.update_button)
         button_layout.addWidget(self.delete_button)
 
-        # Tabla
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["ID", "Nombre", "Teléfono", "Email", "Dirección"])
@@ -405,7 +389,6 @@ def cargar_ventas(table_widget):
             table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
     conn.close()
 
-# Función para agregar una venta
 def agregar_venta(id_cliente, total, fecha):
     conn = connect_db()
     cursor = conn.cursor()
@@ -416,7 +399,6 @@ def agregar_venta(id_cliente, total, fecha):
     conn.commit()
     conn.close()
 
-# Función para actualizar una venta
 def actualizar_venta(id_venta, id_cliente, total, fecha):
     conn = connect_db()
     cursor = conn.cursor()
@@ -428,7 +410,6 @@ def actualizar_venta(id_venta, id_cliente, total, fecha):
     conn.commit()
     conn.close()
 
-# Función para eliminar una venta
 def eliminar_venta(id_venta):
     conn = connect_db()
     cursor = conn.cursor()
@@ -436,7 +417,6 @@ def eliminar_venta(id_venta):
     conn.commit()
     conn.close()
 
-# Clase para la interfaz gráfica del CRUD de Ventas
 class VentasApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -447,7 +427,7 @@ class VentasApp(QMainWindow):
     def init_ui(self):
         main_layout = QVBoxLayout()
 
-        # Formulario
+        
         form_layout = QFormLayout()
         self.id_cliente_input = QLineEdit()
         self.total_input = QLineEdit()
@@ -457,7 +437,7 @@ class VentasApp(QMainWindow):
         form_layout.addRow("Total:", self.total_input)
         form_layout.addRow("Fecha:", self.fecha_input)
 
-        # Botones
+        
         button_layout = QHBoxLayout()
         self.agregar_button = QPushButton("Agregar")
         self.actualizar_button = QPushButton("Actualizar")
@@ -471,7 +451,7 @@ class VentasApp(QMainWindow):
         button_layout.addWidget(self.actualizar_button)
         button_layout.addWidget(self.eliminar_button)
 
-        # Tabla
+        
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["ID Venta", "ID Cliente", "Total", "Fecha"])
@@ -533,7 +513,7 @@ def agregar_detalle_venta(id_venta, id_producto, cantidad, precio_unitario):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO Detalles_Venta (id_venta, id_producto, cantidad, precio_unitario)
+        INSERT INTO Detalles_Venta (id_venta, id_producto, cantidad, subtotal)
         VALUES (%s, %s, %s, %s)
     """, (id_venta, id_producto, cantidad, precio_unitario))
     conn.commit()
@@ -544,7 +524,7 @@ def actualizar_detalle_venta(id_detalle, id_venta, id_producto, cantidad, precio
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE Detalles_Venta
-        SET id_venta = %s, id_producto = %s, cantidad = %s, precio_unitario = %s
+        SET id_venta = %s, id_producto = %s, cantidad = %s, subtotal = %s
         WHERE id_detalle = %s
     """, (id_venta, id_producto, cantidad, precio_unitario, id_detalle))
     conn.commit()
