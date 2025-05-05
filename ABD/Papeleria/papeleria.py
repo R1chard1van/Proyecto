@@ -768,7 +768,7 @@ class ComprasApp(CRUDWindow):
 def cargar_detalles_compra(table_widget):
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Detalles_Compra")
+    cursor.execute("SELECT id_detalle, id_compra, id_producto, cantidad, costo_unitario, subtotal FROM Detalles_Compra")
     rows = cursor.fetchall()
     table_widget.setRowCount(len(rows))
     for i, row in enumerate(rows):
@@ -776,33 +776,44 @@ def cargar_detalles_compra(table_widget):
             table_widget.setItem(i, j, QTableWidgetItem(str(cell)))
     conn.close()
 
-def agregar_detalle_compra(id_compra, id_producto, cantidad, precio_unitario):
+def agregar_detalle_compra(id_compra, id_producto, cantidad, costo_unitario, subtotal):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO Detalles_Compra (id_compra, id_producto, cantidad, precio_unitario)
-        VALUES (%s, %s, %s, %s)
-    """, (id_compra, id_producto, cantidad, precio_unitario))
+        INSERT INTO Detalles_Compra 
+        (id_compra, id_producto, cantidad, costo_unitario, subtotal)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (id_compra, id_producto, cantidad, costo_unitario, subtotal))
     conn.commit()
     conn.close()
 
-def actualizar_detalle_compra(id_detalle, id_compra, id_producto, cantidad, precio_unitario):
+def actualizar_detalle_compra(id_detalle, id_compra, id_producto, cantidad, costo_unitario, subtotal):
     conn = connect_db()
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE Detalles_Compra
-        SET id_compra = %s, id_producto = %s, cantidad = %s, precio_unitario = %s
+        SET id_compra = %s, 
+            id_producto = %s, 
+            cantidad = %s, 
+            costo_unitario = %s,
+            subtotal = %s
         WHERE id_detalle = %s
-    """, (id_compra, id_producto, cantidad, precio_unitario, id_detalle))
+    """, (id_compra, id_producto, cantidad, costo_unitario, subtotal, id_detalle))
     conn.commit()
     conn.close()
 
 def eliminar_detalle_compra(id_detalle):
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM Detalles_Compra WHERE id_detalle = %s", (id_detalle,))
-    conn.commit()
-    conn.close()
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM Detalles_Compra WHERE id_detalle = %s", (id_detalle,))
+        conn.commit()
+    except Exception as e:
+        print(f"Error al eliminar detalle: {str(e)}")
+        raise  
+    finally:
+        if conn:
+            conn.close()
 
 class DetallesCompraApp(CRUDWindow):
     def __init__(self, main_menu):
@@ -817,11 +828,13 @@ class DetallesCompraApp(CRUDWindow):
         self.id_producto_input = QLineEdit()
         self.cantidad_input = QLineEdit()
         self.precio_unitario_input = QLineEdit()
+        self.subtotal_input = QLineEdit()
 
         form_layout.addRow("ID Compra:", self.id_compra_input)
         form_layout.addRow("ID Producto:", self.id_producto_input)
         form_layout.addRow("Cantidad:", self.cantidad_input)
         form_layout.addRow("Precio Unitario:", self.precio_unitario_input)
+        form_layout.addRow("Subtotal:", self.subtotal_input)  
 
         button_layout = QHBoxLayout()
         self.add_button = QPushButton("Agregar")
@@ -837,8 +850,8 @@ class DetallesCompraApp(CRUDWindow):
         button_layout.addWidget(self.delete_button)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["ID Detalle", "ID Compra", "ID Producto", "Cantidad", "precio unitario"])
+        self.table.setColumnCount(6)  
+        self.table.setHorizontalHeaderLabels(["ID Detalle", "ID Compra", "ID Producto", "Cantidad", "Precio unitario", "Subtotal"])
         self.table.cellClicked.connect(self.load_inputs_from_table)
         cargar_detalles_compra(self.table)
 
@@ -858,13 +871,16 @@ class DetallesCompraApp(CRUDWindow):
         self.id_producto_input.setText(self.table.item(row, 2).text())
         self.cantidad_input.setText(self.table.item(row, 3).text())
         self.precio_unitario_input.setText(self.table.item(row, 4).text())
+        self.subtotal_input.setText(self.table.item(row, 5).text())  
 
     def add_detalle(self):
         id_compra = self.id_compra_input.text()
         id_producto = self.id_producto_input.text()
-        cantidad = int(self.cantidad_input.text())
-        precio_unitario = float(self.precio_unitario_input.text())
-        agregar_detalle_compra(id_compra, id_producto, cantidad, precio_unitario)
+        cantidad = self.cantidad_input.text()
+        precio_unitario = self.precio_unitario_input.text()
+        subtotal = self.subtotal_input.text() 
+        
+        agregar_detalle_compra(id_compra, id_producto, cantidad, precio_unitario, subtotal)  
         cargar_detalles_compra(self.table)
 
     def update_detalle(self):
@@ -872,9 +888,11 @@ class DetallesCompraApp(CRUDWindow):
             id_detalle = self.selected_id
             id_compra = self.id_compra_input.text()
             id_producto = self.id_producto_input.text()
-            cantidad = int(self.cantidad_input.text())
-            precio_unitario = float(self.precio_unitario_input.text())
-            actualizar_detalle_compra(id_detalle, id_compra, id_producto, cantidad, precio_unitario)
+            cantidad = self.cantidad_input.text()
+            precio_unitario = self.precio_unitario_input.text()
+            subtotal = self.subtotal_input.text() 
+            
+            actualizar_detalle_compra(id_detalle, id_compra, id_producto, cantidad, precio_unitario, subtotal) 
             cargar_detalles_compra(self.table)
 
     def delete_detalle(self):
@@ -889,7 +907,7 @@ class DetallesCompraApp(CRUDWindow):
         self.id_producto_input.clear()
         self.cantidad_input.clear()
         self.precio_unitario_input.clear()
-
+        self.subtotal_input.clear()
        
 class MainMenu(QMainWindow):
     def __init__(self):
