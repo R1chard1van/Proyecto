@@ -473,7 +473,7 @@ class VentasApp(CRUDWindow):
 
         self.table = QTableWidget()
         self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["ID Venta", "ID Cliente", "Total", "Fecha"])
+        self.table.setHorizontalHeaderLabels(["ID Venta", "ID Cliente", "Fecha", "Total"])
         self.table.cellClicked.connect(self.cargar_inputs_desde_tabla)
 
         cargar_ventas(self.table)
