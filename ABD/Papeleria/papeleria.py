@@ -997,7 +997,7 @@ class MainMenu(QMainWindow):
         layout.addWidget(btn_detalles_venta)
         layout.addWidget(btn_detalles_compra)
         
-        exit_btn = QPushButton("🚪 Salir del Sistema")
+        exit_btn = QPushButton("Salir del Sistema")
         exit_btn.setStyleSheet("""
             QPushButton {
                 padding: 12px;
@@ -1033,6 +1033,7 @@ class MainMenu(QMainWindow):
     def show_compras(self):
         self.hide()
         self.compras_window.show()
+   
     def show_detalles_venta(self):
         self.hide()
         self.detalles_venta_window.show()
